@@ -46,7 +46,7 @@ export default class Tetris {
     const matrix = this._figuresMatrix[name];
     const columnStart =
       this._playfield[0].length / 2 - Math.floor(matrix[0].length / 2);
-    const rowStart = name === "line" ? -1 : -2;
+    const rowStart = 1 - matrix.length;
 
     this._figure = {
       name: name,
@@ -69,7 +69,10 @@ export default class Tetris {
       for (let column = 0; column < newMatrix[row].length; column++) {
         if (newMatrix[row][column]) {
           // 1 проверяем не выходит ли матрица за края поля
-          if (column + newColumn > this._columnsCount - 1 ||  column + newColumn < 0) {
+          if (
+            column + newColumn > this._columnsCount - 1 ||
+            column + newColumn < 0
+          ) {
             return false;
           }
           // 2 проверяем не попадает ли матрица ниже поля
@@ -97,40 +100,43 @@ export default class Tetris {
             return;
           }
           // если всё в порядке, то записываем в массив игрового поля нашу фигуру
-          this._playfield[this._figure.rowStart + row][this._figure.columnStart + column] = this._figure.name;
+          this._playfield[this._figure.rowStart + row][
+            this._figure.columnStart + column
+          ] = this._figure.name;
         }
-      } 
+      }
     }
   }
 
   //метод для очистки заполненных рядов
   async _clearFullRows() {
     for (let row = 0; row < this._rowsCount; row++) {
-      if (this._playfield[row].every(cell => cell !== 0)) {
+      if (this._playfield[row].every((cell) => cell !== 0)) {
         //подсвечиваем все кубики зелёным цветом
-        for (let column = 0; column < row.length; column++) {
-          this._context.fillStyle = "rgb(38 237 44)";
-          this._renderCell(column, row);
+        for (let column = 0; column < this._playfield[row].length; column++) {
+          this._context.fillStyle = "rgb(46 255 0)";
+          this._renderCell(column * this._grid, row * this._grid);
         }
-        await delay(1000);
+
+        await delay(500);
         // очищаем его и опускаем всё вниз на одну клетку
-        for (let column = 0; column < row.length; column++) {
+        for (let column = 0; column < this._playfield[row].length; column++) {
           this._playfield[row][column] = 0;
         }
 
-        this._renderPlayfield();
-        await delay(1000);
-
-        for (let rowPl = -1; rowPl < row; row++) {
-          for (let col = 0; col < rowPl.length; col++) {
+        console.log(this._playfield);
+        for (let rowPl = 0; rowPl < row; rowPl++) {
+          for (let col = 0; col < this._playfield[rowPl].length; col++) {
             this._playfield[rowPl + 1][col] = this._playfield[rowPl][col];
           }
+          console.log(this._playfield[rowPl + 1]);
         }
+
+        this._renderPlayfield();
       }
     }
   }
 
-  
   // метод для отрисовки квадритиков поля
   _renderCell(x, y) {
     // чтобы получились кубики с границами, ширину и длину квадрата уменьшаем на 1
@@ -142,12 +148,9 @@ export default class Tetris {
     for (let row = 0; row < 20; row++) {
       for (let col = 0; col < 10; col++) {
         if (this._playfield[row][col]) {
-          const name = playfield[row][col];
-          this._context.fillStyle = colors[name];
-          this._renderCell(
-            col * this._grid,
-            row * this._grid,
-          );
+          const name = this._playfield[row][col];
+          this._context.fillStyle = this._figuresColors[name];
+          this._renderCell(col * this._grid, row * this._grid);
         }
       }
     }
@@ -164,7 +167,10 @@ export default class Tetris {
     for (let row = 0; row < this._figure.matrix.length; row++) {
       for (let column = 0; column < this._figure.matrix[row].length; column++) {
         if (this._figure.matrix[row][column]) {
-          this._renderCell((this._figure.columnStart + column) * this._grid, (this._figure.rowStart + row) * this._grid);
+          this._renderCell(
+            (this._figure.columnStart + column) * this._grid,
+            (this._figure.rowStart + row) * this._grid
+          );
         }
       }
     }
@@ -172,14 +178,20 @@ export default class Tetris {
 
   async _game() {
     do {
-      await delay(1000);
+      await delay(500);
+      this._figure.rowStart++;
       this._resetField();
       this._renderPlayfield();
-      this._figure.rowStart++;
 
       this._context.fillStyle = this._figuresColors[this._figure.name];
-      this._renderFigure()
-    } while (this._validateMove(this._figure.matrix, this._figure.rowStart, this._figure.columnStart))
+      this._renderFigure();
+    } while (
+      this._validateMove(
+        this._figure.matrix,
+        this._figure.rowStart + 1,
+        this._figure.columnStart
+      )
+    );
 
     this._addFigureInPlayfield();
 
@@ -187,7 +199,7 @@ export default class Tetris {
       return;
     }
 
-    this._clearFullRows();
+    await this._clearFullRows();
 
     this._getNextFigure();
     this._game();
@@ -205,21 +217,31 @@ export default class Tetris {
     if (!this._endOfGame) {
       if (evt.key === "ArrowUp") {
         const matrix = this._rotateFigure(this._figure.matrix);
-        if (this._validateMove(matrix, this._figure.rowStart, this._figure.columnStart)) {
+        if (
+          this._validateMove(
+            matrix,
+            this._figure.rowStart,
+            this._figure.columnStart
+          )
+        ) {
           this._figure.matrix = matrix;
         }
       }
 
       if (evt.key === "ArrowLeft") {
         const column = this._figure.columnStart - 1;
-        if (this._validateMove(this._figure.matrix, this._figure.rowStart, column)) {
+        if (
+          this._validateMove(this._figure.matrix, this._figure.rowStart, column)
+        ) {
           this._figure.columnStart = column;
         }
       }
 
       if (evt.key === "ArrowRight") {
         const column = this._figure.columnStart + 1;
-        if (this._validateMove(this._figure.matrix, this._figure.rowStart, column)) {
+        if (
+          this._validateMove(this._figure.matrix, this._figure.rowStart, column)
+        ) {
           this._figure.columnStart = column;
         }
       }
