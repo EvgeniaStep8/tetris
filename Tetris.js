@@ -1,7 +1,7 @@
 import { figuresMatrix, figuresColors, delay } from "./contants.js";
 
 export default class Tetris {
-  constructor(canvasSelector) {
+  constructor(canvasSelector, scoreSelector) {
     this._playfield = [];
     this._rowsCount = 20;
     this._columnsCount = 10;
@@ -14,10 +14,13 @@ export default class Tetris {
     this._figuresColors = figuresColors;
 
     this._endOfGame = false;
+
+    this._scoreElement = document.querySelector(scoreSelector);
+    this._score = 0;
   }
 
   // метод для  создания двумерного массива игрового поля, куда мы будем записывать фигуры
-  createPlayfield() {
+  _createPlayfield() {
     for (let row = -2; row < this._rowsCount; row++) {
       this._playfield[row] = [];
 
@@ -25,6 +28,11 @@ export default class Tetris {
         this._playfield[row][col] = 0;
       }
     }
+  }
+
+  // метод для отображения счёта
+  _renderScore() {
+    this._scoreElement.textContent = `Счёт: ${this._score}`;
   }
 
   // метод для получения случайной фигуры, возвращает имя для случайной фигуры
@@ -125,22 +133,23 @@ export default class Tetris {
         }
 
         console.log(this._playfield);
-        for (let rowPl = 0; rowPl < row; rowPl++) {
+        for (let rowPl = row; rowPl > 0; rowPl--) {
           for (let col = 0; col < this._playfield[rowPl].length; col++) {
-            this._playfield[rowPl + 1][col] = this._playfield[rowPl][col];
+            this._playfield[rowPl][col] = this._playfield[rowPl - 1][col];
           }
-          console.log(this._playfield[rowPl + 1]);
         }
 
         this._renderPlayfield();
+        this._score += 100;
+        this._renderScore();
       }
     }
   }
 
   // метод для отрисовки квадритиков поля
   _renderCell(x, y) {
-    // чтобы получились кубики с границами, ширину и длину квадрата уменьшаем на 1
-    this._context.fillRect(x, y, this._grid - 1, this._grid - 1);
+    // чтобы получились кубики с границами, ширину и длину квадрата уменьшаем на 2
+    this._context.fillRect(x, y, this._grid - 3, this._grid - 3);
   }
 
   // метод для отрисовки поля
@@ -207,8 +216,9 @@ export default class Tetris {
 
   // публичный метод для запуска игры
   async startGame() {
+    this._renderScore();
+    this._createPlayfield();
     this._getNextFigure();
-    this.createPlayfield();
 
     await this._game();
   }

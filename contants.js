@@ -37,13 +37,13 @@ const figuresMatrix = {
 }
 
 const figuresColors = {
-  'line': 'cyan',
+  'line': 'violet',
   'square': 'yellow',
-  'T': 'purple',
+  'T': 'red',
   'S': 'green',
-  'Z': 'red',
-  'J': 'blue',
-  'L': 'orange'
+  'Z': 'lightblue',
+  'J': 'pink',
+  'L': 'blue'
 };
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));

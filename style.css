@@ -1,9 +1,18 @@
 body {
   background-color: rgb(43, 6, 59);
   height: 100vh;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.score {
+  margin: 0;
+  padding: 0;
+  color: palevioletred;
+  font-size: 30px;
+  font-weight: 600;
 }
 
 canvas {
