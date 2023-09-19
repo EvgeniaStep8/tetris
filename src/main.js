@@ -1,4 +1,5 @@
-import Tetris from "./Tetris.js";
+import "./assets/styles/style.css";
+import Tetris from "./components/Tetris.js";
 
 const tetris = new Tetris(
   "#tetris",

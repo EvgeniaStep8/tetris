@@ -1,5 +1,3 @@
-import { figuresMatrix, figuresColors, delay } from "./contants.js";
-
 export default class Tetris {
   constructor(
     canvasSelector,
@@ -16,17 +14,65 @@ export default class Tetris {
     this._context = this._canvas.getContext("2d");
     this._grid = 32;
 
-    this._figuresMatrix = figuresMatrix;
-    this._figuresColors = figuresColors;
+    this._figuresMatrix = {
+      line: [
+        [0, 0, 0, 0],
+        [1, 1, 1, 1],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+      ],
+      square: [
+        [1, 1],
+        [1, 1],
+      ],
+      L: [
+        [0, 0, 1],
+        [1, 1, 1],
+        [0, 0, 0],
+      ],
+      J: [
+        [0, 0, 0],
+        [1, 1, 1],
+        [0, 0, 1],
+      ],
+      S: [
+        [0, 1, 1],
+        [1, 1, 0],
+        [0, 0, 0],
+      ],
+      Z: [
+        [1, 1, 0],
+        [0, 1, 1],
+        [0, 0, 0],
+      ],
+      T: [
+        [0, 0, 0],
+        [1, 1, 1],
+        [0, 1, 0],
+      ]
+    };
+
+    this._figuresColors = {
+      'line': 'violet',
+      'square': 'yellow',
+      'T': 'red',
+      'S': 'green',
+      'Z': 'lightblue',
+      'J': 'hotpink',
+      'L': 'blue'
+    };;
 
     this._endOfGame = false;
 
     this._scoreElement = document.querySelector(scoreSelector);
     this._score = 0;
+    this._delay = 500;
 
     this._overlay = document.querySelector(overlaySelector);
     this._overlayVisibleClass = overlayVisibleClass;
     this._newGameButton = document.querySelector(newGameButtonSelector);
+
+    this._addDelay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   // метод для  создания двумерного массива игрового поля, куда мы будем записывать фигуры
@@ -117,7 +163,7 @@ export default class Tetris {
       for (let column = 0; column < this._figure.matrix[row].length; column++) {
         if (this._figure.matrix[row][column]) {
           // если край фигуры после установки вылезает за границы поля, то игра закончилась
-          if (this._figure.rowStart + row < 0) {
+          if (this._figure.rowStart + row <= 0) {
             this._endOfGame = true;
             this._renderEndOfGame();
             return;
@@ -141,20 +187,18 @@ export default class Tetris {
           this._renderCell(column * this._grid, row * this._grid);
         }
 
-        await delay(500);
+        await this._addDelay(this._delay);
         // очищаем его и опускаем всё вниз на одну клетку
         for (let column = 0; column < this._playfield[row].length; column++) {
           this._playfield[row][column] = 0;
         }
 
-        console.log(this._playfield);
         for (let rowPl = row; rowPl > 0; rowPl--) {
           for (let col = 0; col < this._playfield[rowPl].length; col++) {
             this._playfield[rowPl][col] = this._playfield[rowPl - 1][col];
           }
         }
 
-        this._renderPlayfield();
         this._score += 100;
         this._renderScore();
       }
@@ -202,7 +246,7 @@ export default class Tetris {
 
   async _game() {
     do {
-      await delay(500);
+      await this._addDelay(this._delay);
       this._figure.rowStart++;
       this._resetField();
       this._renderPlayfield();
@@ -275,12 +319,16 @@ export default class Tetris {
 
   async _handleNewGame() {
     this._overlay.classList.remove(this._overlayVisibleClass);
-    await this.startGame();
+    this._endOfGame = false;
+    this._createPlayfield();
+    this._getNextFigure();
+    this._score = 0;
+    await this._game();
   }
 
   setEventListeners() {
     document.addEventListener("keydown", this._handleKeydown.bind(this));
 
-    this._newGameButton.addEventListener("click", this._handleNewGame);
+    this._newGameButton.addEventListener("click", this._handleNewGame.bind(this));
   }
 }
