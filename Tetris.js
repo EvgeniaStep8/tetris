@@ -1,7 +1,13 @@
 import { figuresMatrix, figuresColors, delay } from "./contants.js";
 
 export default class Tetris {
-  constructor(canvasSelector, scoreSelector) {
+  constructor(
+    canvasSelector,
+    scoreSelector,
+    overlaySelector,
+    overlayVisibleClass,
+    newGameButtonSelector
+  ) {
     this._playfield = [];
     this._rowsCount = 20;
     this._columnsCount = 10;
@@ -17,6 +23,10 @@ export default class Tetris {
 
     this._scoreElement = document.querySelector(scoreSelector);
     this._score = 0;
+
+    this._overlay = document.querySelector(overlaySelector);
+    this._overlayVisibleClass = overlayVisibleClass;
+    this._newGameButton = document.querySelector(newGameButtonSelector);
   }
 
   // метод для  создания двумерного массива игрового поля, куда мы будем записывать фигуры
@@ -97,6 +107,10 @@ export default class Tetris {
     return true;
   }
 
+  _renderEndOfGame() {
+    this._overlay.classList.add(this._overlayVisibleClass);
+  }
+
   // метод для добавления матрицы фигуры в матрицу игрового поля
   _addFigureInPlayfield() {
     for (let row = 0; row < this._figure.matrix.length; row++) {
@@ -105,6 +119,7 @@ export default class Tetris {
           // если край фигуры после установки вылезает за границы поля, то игра закончилась
           if (this._figure.rowStart + row < 0) {
             this._endOfGame = true;
+            this._renderEndOfGame();
             return;
           }
           // если всё в порядке, то записываем в массив игрового поля нашу фигуру
@@ -258,7 +273,14 @@ export default class Tetris {
     }
   }
 
+  async _handleNewGame() {
+    this._overlay.classList.remove(this._overlayVisibleClass);
+    await this.startGame();
+  }
+
   setEventListeners() {
     document.addEventListener("keydown", this._handleKeydown.bind(this));
+
+    this._newGameButton.addEventListener("click", this._handleNewGame);
   }
 }
