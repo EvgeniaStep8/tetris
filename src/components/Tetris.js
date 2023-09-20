@@ -4,7 +4,10 @@ export default class Tetris {
     scoreSelector,
     overlaySelector,
     overlayVisibleClass,
-    newGameButtonSelector
+    newGameButtonSelector,
+    buttonUpSelector,
+    buttonLeftSelector,
+    buttonRightSelector
   ) {
     this._playfield = [];
     this._rowsCount = 20;
@@ -49,18 +52,18 @@ export default class Tetris {
         [0, 0, 0],
         [1, 1, 1],
         [0, 1, 0],
-      ]
+      ],
     };
 
     this._figuresColors = {
-      'line': 'violet',
-      'square': 'yellow',
-      'T': 'red',
-      'S': 'green',
-      'Z': 'lightblue',
-      'J': 'hotpink',
-      'L': 'blue'
-    };;
+      line: "violet",
+      square: "yellow",
+      T: "red",
+      S: "green",
+      Z: "lightblue",
+      J: "hotpink",
+      L: "blue",
+    };
 
     this._endOfGame = false;
 
@@ -71,6 +74,10 @@ export default class Tetris {
     this._overlay = document.querySelector(overlaySelector);
     this._overlayVisibleClass = overlayVisibleClass;
     this._newGameButton = document.querySelector(newGameButtonSelector);
+
+    this._buttonUp = document.querySelector(buttonUpSelector);
+    this._buttonLeft = document.querySelector(buttonLeftSelector);
+    this._buttonRight = document.querySelector(buttonRightSelector);
 
     this._addDelay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   }
@@ -121,7 +128,7 @@ export default class Tetris {
   }
 
   // метод для вращения фигуры
-  _rotateFigure(matrix) {
+  _rotateMatrix(matrix) {
     return matrix.map((row, i) =>
       row.map((val, j) => matrix[matrix.length - 1 - j][i])
     );
@@ -282,37 +289,51 @@ export default class Tetris {
     await this._game();
   }
 
+  // вращение фигуры
+  _rotateFigure() {
+    const matrix = this._rotateMatrix(this._figure.matrix);
+    if (
+      this._validateMove(
+        matrix,
+        this._figure.rowStart,
+        this._figure.columnStart
+      )
+    ) {
+      this._figure.matrix = matrix;
+    }
+  }
+
+  // методы для перемещение фигуры вправо и влево на клетку
+  _moveLeftFigure() {
+    const column = this._figure.columnStart - 1;
+    if (
+      this._validateMove(this._figure.matrix, this._figure.rowStart, column)
+    ) {
+      this._figure.columnStart = column;
+    }
+  }
+
+  _moveRightFigure() {
+    const column = this._figure.columnStart + 1;
+    if (
+      this._validateMove(this._figure.matrix, this._figure.rowStart, column)
+    ) {
+      this._figure.columnStart = column;
+    }
+  }
+
   _handleKeydown(evt) {
     if (!this._endOfGame) {
       if (evt.key === "ArrowUp") {
-        const matrix = this._rotateFigure(this._figure.matrix);
-        if (
-          this._validateMove(
-            matrix,
-            this._figure.rowStart,
-            this._figure.columnStart
-          )
-        ) {
-          this._figure.matrix = matrix;
-        }
+        this._rotateFigure();
       }
 
       if (evt.key === "ArrowLeft") {
-        const column = this._figure.columnStart - 1;
-        if (
-          this._validateMove(this._figure.matrix, this._figure.rowStart, column)
-        ) {
-          this._figure.columnStart = column;
-        }
+        this._moveLeftFigure();
       }
 
       if (evt.key === "ArrowRight") {
-        const column = this._figure.columnStart + 1;
-        if (
-          this._validateMove(this._figure.matrix, this._figure.rowStart, column)
-        ) {
-          this._figure.columnStart = column;
-        }
+        this._moveRightFigure();
       }
     }
   }
@@ -329,6 +350,13 @@ export default class Tetris {
   setEventListeners() {
     document.addEventListener("keydown", this._handleKeydown.bind(this));
 
-    this._newGameButton.addEventListener("click", this._handleNewGame.bind(this));
+    this._newGameButton.addEventListener(
+      "click",
+      this._handleNewGame.bind(this)
+    );
+
+    this._buttonUp.addEventListener("click", this._rotateFigure.bind(this));
+    this._buttonLeft.addEventListener("click", this._moveLeftFigure.bind(this));
+    this._buttonRight.addEventListener("click", this._moveRightFigure.bind(this));
   }
 }

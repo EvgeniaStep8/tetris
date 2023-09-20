@@ -6,7 +6,10 @@ const tetris = new Tetris(
   ".score",
   ".overlay",
   "overlay_visible",
-  ".new-game"
+  ".new-game",
+  "#key-up",
+  "#key-left",
+  "#key-right"
 );
 
 tetris.setEventListeners();
