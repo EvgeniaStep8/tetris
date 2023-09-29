@@ -344,6 +344,7 @@ export default class Tetris {
     this._createPlayfield();
     this._getNextFigure();
     this._score = 0;
+    this._renderScore();
     await this._game();
   }
 
